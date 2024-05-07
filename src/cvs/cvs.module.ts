@@ -6,9 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CvsV2Controller } from './cvs.v2.controller';
 import { AuthMiddleware } from '../auth/auth.middleware';
 import { AuthModule } from '../auth/auth.module';
+import { AuditModule } from '../audit/audit.module';
+import { AuditEntity } from '../audit/entites/audit.entity';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CvEntity]), AuthModule],
+  imports: [TypeOrmModule.forFeature([CvEntity,AuditEntity]), AuthModule,AuditModule,EventEmitterModule],
   controllers: [CvsController, CvsV2Controller],
   providers: [CvsService],
 })

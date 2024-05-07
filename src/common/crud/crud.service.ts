@@ -9,6 +9,8 @@ import {
 import { Entity } from '../interfaces/entity.interface';
 import { SearchDto } from '../dto/search.dto';
 import { Pagination } from '../dto/pagination.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 
 export abstract class CrudService<TEntity extends Entity> {
   constructor(protected readonly repository: Repository<TEntity>) {}

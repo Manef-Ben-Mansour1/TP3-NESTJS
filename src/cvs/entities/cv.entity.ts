@@ -1,13 +1,13 @@
 import { SkillEntity } from '../../skills/entities/skill.entity';
 import { UserEntity } from '../../auth/entities/user.entity';
 import {
-  Column,
+  Column, CreateDateColumn, DeleteDateColumn,
   Entity,
   JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryGeneratedColumn, Timestamp, UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('cv')
@@ -55,4 +55,13 @@ export class CvEntity {
     },
   })
   skills: SkillEntity[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

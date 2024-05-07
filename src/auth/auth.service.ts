@@ -62,10 +62,11 @@ export class AuthService extends CrudService<UserEntity> {
       sub: user.id,
       username: user.username,
       role: user.role,
+
     };
 
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload, { expiresIn: '1d' })
     };
   }
 

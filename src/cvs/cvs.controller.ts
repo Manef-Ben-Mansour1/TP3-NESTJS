@@ -20,10 +20,11 @@ import { fileUploadOptions } from '../file-upload';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from '../auth/user.decorator';
 import { Role, UserEntity } from '../auth/entities/user.entity';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Controller({
   path: 'cvs',
-  version: '1',
+
 })
 @UseGuards(JwtAuthGuard)
 export class CvsController {
@@ -39,7 +40,7 @@ export class CvsController {
     createCvDto.user = user;
     createCvDto.path = file?.filename;
 
-    return this.cvsService.create(createCvDto);
+    return this.cvsService.createCv(createCvDto);
   }
 
   @Get()
@@ -58,21 +59,38 @@ export class CvsController {
       skills: true,
     });
   }
+  @Patch('recover/:id')
+  @UseGuards(AdminGuard)
+  @UseInterceptors(FileInterceptor('file', fileUploadOptions))
+  recover(
+    @User() user: any,
+    @Param('id') id: string,
+
+
+  ) {
+
+
+    return this.cvsService.recoverCv(id);
+  }
 
   @Patch(':id')
   @UseInterceptors(FileInterceptor('file', fileUploadOptions))
   update(
+    @User() user: any,
     @Param('id') id: string,
     @Body() updateCvDto: UpdateCvDto,
     @UploadedFile() file?: Express.Multer.File,
+
   ) {
     updateCvDto.path = file?.filename;
 
-    return this.cvsService.update(id, updateCvDto);
+    return this.cvsService.updateCv(id, updateCvDto,user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cvsService.remove(id);
+  remove(@Param('id') id: string,@User() user: UserEntity) {
+    return this.cvsService.removeCv(id,user);
   }
+
+
 }

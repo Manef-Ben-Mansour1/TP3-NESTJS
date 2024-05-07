@@ -1,19 +1,34 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CvEntity } from './entities/cv.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CrudService } from '../common/crud/crud.service';
-import { Like, Repository } from 'typeorm';
+import { DeepPartial, Like, Repository } from 'typeorm';
 import { SearchCvDto } from './dto/search-cv.dto';
 import { Pagination } from 'src/common/dto/pagination.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CvEvent } from '../events/cv.events';
 
 @Injectable()
 export class CvsService extends CrudService<CvEntity> {
   constructor(
     @InjectRepository(CvEntity)
-    cvsRepository: Repository<CvEntity>,
+    private cvsRepository: Repository<CvEntity>,
+    private eventEmitter: EventEmitter2,
+
+
   ) {
     super(cvsRepository);
+  }
+  async createCv(createCvDto: DeepPartial<CvEntity>): Promise<CvEntity> {
+    // Use the repository to save the new CV entity
+    const cv = await this.cvsRepository.save(createCvDto);
+
+    // Emit the event after the CV is created
+    this.eventEmitter.emit('cv.created', new CvEvent(cv.id, cv.user.id));
+
+    // Return the newly created CV
+    return cv;
   }
 
   findAllBy(
@@ -51,6 +66,45 @@ export class CvsService extends CrudService<CvEntity> {
       throw new ForbiddenException();
     }
   }
+  async removeCv(id: string,user:any): Promise<any> {
+    // Remove the CV entity
+   const cv= await this.cvsRepository.findOne({where:{id}});
+   if(!cv){
+     throw new NotFoundException();
+   }
+   if(cv.user.id !== user.id){
+      throw new ForbiddenException("ce cv n'est pas le votre");
+   }
+    this.eventEmitter.emit('cv.deleted', new CvEvent(cv.id, cv.user.id));
+
+   return await this.cvsRepository.softRemove(cv)  ;
+  }
+
+  async updateCv(id :string, updateCvDto: UpdateCvDto,user:any): Promise<CvEntity> {
+    // Update the CV entity
+    const cv = await this.cvsRepository.findOne({where:{id:id}});
+
+    if(!cv){
+      throw new NotFoundException();
+    }
+    if(cv.user.id !== user.id){
+       throw new ForbiddenException("ce cv n'est pas le votre");
+    }
+    this.eventEmitter.emit('cv.updated', new CvEvent(cv.id, cv.user.id));
+    return await this.cvsRepository.save({...cv,...updateCvDto});
+  }
+  async recoverCv(id :string): Promise<CvEntity> {
+    // Update the CV entity
+    const cv = await this.cvsRepository.findOne({where:{id},withDeleted:true});
+
+
+    if(!cv){
+      throw new NotFoundException();
+    }
+
+    this.eventEmitter.emit('cv.recovered', new CvEvent(cv.id, cv.user.id));
+    return await this.cvsRepository.recover({...cv});
+  }
 
   async updateOwned(id: string, updateCvDto: UpdateCvDto, userId: string) {
     await this.verifyOwnership(id, userId);
@@ -58,9 +112,11 @@ export class CvsService extends CrudService<CvEntity> {
     return this.update(id, updateCvDto);
   }
 
+
   async removeOwned(id: string, userId: string) {
     await this.verifyOwnership(id, userId);
 
     return this.remove(id);
   }
+
 }
