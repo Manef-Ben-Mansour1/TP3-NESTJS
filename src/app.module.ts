@@ -15,7 +15,6 @@ import { join } from 'path';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuditModule } from './audit/audit.module';
 import { AuditEntity } from './audit/entites/audit.entity';
-import { ListenerModule } from './listener/listener.module';
 
 
 @Module({
@@ -41,7 +40,6 @@ import { ListenerModule } from './listener/listener.module';
     SkillsModule,
     CommonModule,
     AuditModule,
-    ListenerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
