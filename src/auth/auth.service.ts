@@ -51,7 +51,6 @@ export class AuthService extends CrudService<UserEntity> {
 
   async login(loginUserDto: LoginUserDto): Promise<AuthDto> {
     const { email, password } = loginUserDto;
-
     const user = await this.repository.findOneBy({ email });
 
     if (!user || !(await compare(password, user.password))) {
