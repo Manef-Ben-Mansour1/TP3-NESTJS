@@ -15,6 +15,7 @@ import { join } from 'path';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AuditModule } from './audit/audit.module';
 import { AuditEntity } from './audit/entites/audit.entity';
+import { ChatGateway } from './chat/chat.gateway';
 
 
 @Module({
@@ -42,6 +43,6 @@ import { AuditEntity } from './audit/entites/audit.entity';
     AuditModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,ChatGateway],
 })
 export class AppModule {}
