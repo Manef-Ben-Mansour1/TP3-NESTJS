@@ -18,7 +18,8 @@ import { AdminGuard } from './admin.guard';
 import { Public } from './public.decorator';
 
 @Controller('auth')
-@UseGuards(AdminGuard)
+
+
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

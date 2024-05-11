@@ -95,10 +95,12 @@ export class CvsService extends CrudService<CvEntity> {
       throw new ForbiddenException("ce cv n'est pas le votre");
     }
     const oldCvJson=await JSON.stringify(oldCv);
+    console.log({oldCvJson})
+    const updatedCv = await this.cvsRepository.save({ ...cv, ...updateCvDto });
     this.eventEmitter.emit('cv.updated', new CvEvent(cv.id, cv.user.id,oldCvJson));
-    return await this.cvsRepository.save({...cv,...updateCvDto});
+    return updatedCv;
   }
-  
+
   async recoverCv(id :string): Promise<CvEntity> {
     // Update the CV entity
     const cv = await this.cvsRepository.findOne({where:{id},withDeleted:true});
@@ -108,12 +110,11 @@ export class CvsService extends CrudService<CvEntity> {
       throw new NotFoundException();
     }
     const oldCvJson=await JSON.stringify(oldCv);
-    const updatedCv = await this.cvsRepository.save({ ...cv, ...updateCvDto });
+
     this.eventEmitter.emit('cv.recovered', new CvEvent(cv.id, cv.user.id,oldCvJson));
-    return updatedCv;
+    return await this.cvsRepository.recover({...cv});
   }
 
-  }
 
 
   async updateOwned(id: string, updateCvDto: UpdateCvDto, userId: string) {

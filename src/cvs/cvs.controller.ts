@@ -43,6 +43,7 @@ export class CvsController {
       fromEvent(this.eventEmitter, event).pipe(
         map((payload: any) => {
             // Check if the logged-in user is the user concerned with the notification.
+          console.log({payload});
             if(user.id === payload.userId || user.role === 'admin'){
                 console.log({ payload });
                 return new MessageEvent(event , { data: payload });
