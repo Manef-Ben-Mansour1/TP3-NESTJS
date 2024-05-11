@@ -1,14 +1,23 @@
-import { MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Socket, Server } from "socket.io";
+import {
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+  ConnectedSocket,
+} from '@nestjs/websockets';
+import { Socket, Server } from 'socket.io';
 
 @WebSocketGateway({ cors: { origin: 'http://localhost:3001' } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-
   @WebSocketServer()
   server: Server;
+  clientId = null;
 
   handleConnection(client: any, ...args: any[]) {
-    client.broadcast.emit('user-joined', { text: `connected: ${client.id}` });
+    this.clientId = client.id;
+    client.emit('user-joined', { text: `connected: ${client.id}` });
   }
 
   handleDisconnect(client: any) {
@@ -26,12 +35,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('comment-message')
-  handleCommentMessage(client: Socket, payload: any): void {
+  handleCommentMessage(client: Socket, payload: any,): void {
     this.server.emit('comment-message', payload);
   }
 
   @SubscribeMessage('message')
-  handleMessage(@MessageBody() message: string): void {
-    this.server.emit('message', message)
+  handleMessage(@MessageBody() message: string,@ConnectedSocket() client: Socket): void {
+    this.server.emit('message', { message, client: client.id });
   }
 }
