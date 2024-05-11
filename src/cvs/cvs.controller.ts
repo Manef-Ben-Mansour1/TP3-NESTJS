@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseInterceptors,
   UseGuards,
+  Sse,
 } from '@nestjs/common';
 import { CvsService } from './cvs.service';
 import { CreateCvDto } from './dto/create-cv.dto';
@@ -21,6 +22,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from '../auth/user.decorator';
 import { Role, UserEntity } from '../auth/entities/user.entity';
 import { AdminGuard } from '../auth/admin.guard';
+import { Observable, fromEvent, map, merge } from 'rxjs';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Controller({
   path: 'cvs',
@@ -28,7 +31,27 @@ import { AdminGuard } from '../auth/admin.guard';
 })
 @UseGuards(JwtAuthGuard)
 export class CvsController {
-  constructor(private readonly cvsService: CvsService) {}
+  constructor(private readonly cvsService: CvsService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
+
+  @Sse('sse')
+  @UseGuards(JwtAuthGuard)
+  sse(@User() user : UserEntity): Observable<any> {
+    const events = ['cv.created', 'cv.updated', 'cv.deleted'];
+    const eventStreams = events.map(event => 
+      fromEvent(this.eventEmitter, event).pipe(
+        map((payload: any) => {
+            // Check if the logged-in user is the user concerned with the notification.
+            if(user.id === payload.userId || user.role === 'admin'){
+                console.log({ payload });
+                return new MessageEvent(event , { data: payload });
+            }
+        })
+      )
+    )
+    return merge(...eventStreams);
+  }
 
   @Post()
   @UseInterceptors(FileInterceptor('file', fileUploadOptions))
