@@ -19,7 +19,8 @@ export class AuditService {
       action: 'CREATE',
       dateTime: new Date(),
       userId: event.userId,
-      cvId: event.cvId
+      cvId: event.cvId,
+      previousData: " "
     });
     await this.auditRepository.save(audit);
   }
@@ -30,7 +31,8 @@ export class AuditService {
       action: 'Delete',
       dateTime: new Date(),
       userId: event.userId,
-      cvId: event.cvId
+      cvId: event.cvId,
+      previousData: event.oldCv
     });
     await this.auditRepository.save(audit);
   }
@@ -40,7 +42,8 @@ export class AuditService {
       action: 'Update',
       dateTime: new Date(),
       userId: event.userId,
-      cvId: event.cvId
+      cvId: event.cvId,
+      previousData: event.oldCv
     });
     await this.auditRepository.save(audit);
   }
@@ -50,7 +53,8 @@ export class AuditService {
       action: 'Recover',
       dateTime: new Date(),
       userId: event.userId,
-      cvId: event.cvId
+      cvId: event.cvId,
+      previousData: event.oldCv
     });
     await this.auditRepository.save(audit);
   }

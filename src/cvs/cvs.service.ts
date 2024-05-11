@@ -25,7 +25,7 @@ export class CvsService extends CrudService<CvEntity> {
     const cv = await this.cvsRepository.save(createCvDto);
 
     // Emit the event after the CV is created
-    this.eventEmitter.emit('cv.created', new CvEvent(cv.id, cv.user.id));
+    this.eventEmitter.emit('cv.created', new CvEvent(cv.id, cv.user.id,""));
 
     // Return the newly created CV
     return cv;
@@ -69,13 +69,16 @@ export class CvsService extends CrudService<CvEntity> {
   async removeCv(id: string,user:any): Promise<any> {
     // Remove the CV entity
    const cv= await this.cvsRepository.findOne({where:{id}});
+
    if(!cv){
      throw new NotFoundException();
    }
    if(cv.user.id !== user.id){
       throw new ForbiddenException("ce cv n'est pas le votre");
    }
-    this.eventEmitter.emit('cv.deleted', new CvEvent(cv.id, cv.user.id));
+   let oldCv = {...cv};
+    const oldCvJson=await JSON.stringify(oldCv);
+    this.eventEmitter.emit('cv.deleted', new CvEvent(cv.id, cv.user.id,oldCvJson));
 
    return await this.cvsRepository.softRemove(cv)  ;
   }
@@ -83,6 +86,7 @@ export class CvsService extends CrudService<CvEntity> {
   async updateCv(id :string, updateCvDto: UpdateCvDto,user:any): Promise<CvEntity> {
     // Update the CV entity
     const cv = await this.cvsRepository.findOne({where:{id:id}});
+    const oldCv = {...cv};
 
     if(!cv){
       throw new NotFoundException();
@@ -90,21 +94,24 @@ export class CvsService extends CrudService<CvEntity> {
     if(cv.user.id !== user.id){
        throw new ForbiddenException("ce cv n'est pas le votre");
     }
-    this.eventEmitter.emit('cv.updated', new CvEvent(cv.id, cv.user.id));
+    const oldCvJson=await JSON.stringify(oldCv);
+    this.eventEmitter.emit('cv.updated', new CvEvent(cv.id, cv.user.id,oldCvJson));
     return await this.cvsRepository.save({...cv,...updateCvDto});
   }
   async recoverCv(id :string): Promise<CvEntity> {
     // Update the CV entity
     const cv = await this.cvsRepository.findOne({where:{id},withDeleted:true});
-
+    const oldCv = {...cv};
 
     if(!cv){
       throw new NotFoundException();
     }
+    const oldCvJson=await JSON.stringify(oldCv);
 
-    this.eventEmitter.emit('cv.recovered', new CvEvent(cv.id, cv.user.id));
+    this.eventEmitter.emit('cv.recovered', new CvEvent(cv.id, cv.user.id,oldCvJson));
     return await this.cvsRepository.recover({...cv});
   }
+
 
   async updateOwned(id: string, updateCvDto: UpdateCvDto, userId: string) {
     await this.verifyOwnership(id, userId);

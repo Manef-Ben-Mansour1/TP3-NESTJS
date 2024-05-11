@@ -20,4 +20,7 @@ export class AuditEntity {
 
   @Column()
   cvId: string;
+
+  @Column('varchar', { length: 1024 }) // Augmentez la valeur ici selon vos besoins
+  previousData: string
 }
